@@ -1,78 +1,81 @@
-# React + TypeScript + Vite
+# Valorant Roast Card
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Generate a playful bilingual roast card from real recent VALORANT statistics. Statistical interpretation is deterministic application logic; the LLM only turns trusted facts into friendly gameplay trash talk.
 
-Currently, two official plugins are available:
+## Quick start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+pnpm install
+cp .env.example .env.local
+pnpm dev:vercel
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Fill the local environment file with server-side credentials. Never use `VITE_` prefixes:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Variable | Purpose |
+| --- | --- |
+| `PARSE_API_KEY` | Parse.bot REST authentication |
+| `GROQ_API_KEY` | Groq server-side authentication |
+| `GROQ_MODEL` | Groq model with reliable structured output |
+| `PLAYER_STATS_SIGNING_SECRET` | HMAC secret for 10-minute player snapshots |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Architecture
 
+```text
+Browser → GET /api/player → Parse.bot → normalize PlayerStats
+        ← PlayerStats + signed snapshot
+Browser → POST /api/roast → verify snapshot → analyzePlayer → Groq/fallback
+        ← validated RoastResult
 ```
+
+- `src/shared` owns browser/server schemas.
+- `src/domain` owns Riot ID parsing, thresholds, analysis, and deterministic fallback.
+- `src/server/valorant` isolates the statistics provider and normalization boundary.
+- `src/server/ai` isolates Groq.
+- `api` contains Vercel Functions. The browser never receives Parse payloads or credentials.
+
+The signed snapshot prevents browser-edited statistics and avoids a second Parse lookup. There is deliberately no database, authentication, Express server, or cross-request cache.
+
+## Parse.bot integration
+
+The development-only Parse MCP identified scraper `6517942a-644e-4cbc-9349-6e6d5ddaa622`, release 11:
+
+| Endpoint | Input | Role | Credits |
+| --- | --- | --- | --- |
+| `get_player_matches` | `player_id` | Required recent matches | 1 |
+| `get_player_segments` | `player_id`, `segment_type=agent` | Optional agent enrichment | 5 |
+
+Runtime calls use `https://api.parse.bot/scraper/{scraper_id}/{endpoint_name}` with `X-API-Key`. A card makes exactly two concurrent calls. Agent enrichment degrades gracefully; match failure stops normalization. Automated tests use synthetic fixtures and mocks and MUST NOT consume credits.
+
+## Groq and fallback
+
+Groq receives whitelisted gameplay stats plus deterministic strengths, weaknesses, facts, archetypes, intensity, and language. It cannot receive user prompts or choose the model. Responses use JSON Schema structured output and are validated again with Zod. Timeout, 429, invalid JSON, or invalid content uses a deterministic bilingual fallback without retrying.
+
+## Commands
+
+```bash
+pnpm dev          # frontend only
+pnpm dev:vercel   # frontend + serverless API
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+## Deploy to Vercel
+
+1. Import the repository in Vercel.
+2. Configure all four environment variables.
+3. Deploy with the default Vite settings.
+4. Confirm `/api/player` and `/api/roast` run server-side and keys are absent from browser bundles.
+
+## Known limits
+
+- Results cover the matches returned by Tracker, not complete lifetime history.
+- RR, weapon performance, party size, and avatar are omitted unless reliable data exists.
+- Maps require two matches and agents three before comparative conclusions.
+- There is no shared cache or product-level rate limiter yet; provider boundaries are ready for those additions.
+
+## Disclaimer
+
+Valorant Roast Card is an independent project and is not affiliated with or endorsed by Riot Games, Tracker Network, or Parse.bot.

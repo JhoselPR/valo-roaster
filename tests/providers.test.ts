@@ -1,0 +1,36 @@
+import { describe, expect, it, vi } from 'vitest'
+import { GroqClient } from '../src/server/ai/groqClient'
+import { ParseStatsProvider } from '../src/server/valorant/parseProvider'
+import { analyzePlayer } from '../src/domain/analyzePlayer'
+import { playerStatsFixture } from './fixtures'
+import { AppError } from '../src/server/errors'
+
+describe('ParseStatsProvider', () => {
+  it('makes exactly the two MCP-confirmed requests and tolerates segment failure', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ data: [1] }), { status: 200 })).mockResolvedValueOnce(new Response('', { status: 502 }))
+    const result = await new ParseStatsProvider({ apiKey: 'test', fetcher }).getPlayerData({ name: 'Name', tag: 'TAG', value: 'Name#TAG' })
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(String(fetcher.mock.calls[0][0])).toContain('get_player_matches?player_id=Name%23TAG')
+    expect(String(fetcher.mock.calls[1][0])).toContain('segment_type=agent')
+    expect(result.segments).toBeUndefined()
+  })
+  it.each([[404, 'PLAYER_NOT_FOUND'], [429, 'RATE_LIMITED'], [500, 'STATS_PROVIDER_ERROR']] as const)('maps upstream status %s', async (status, code) => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status }))
+    try {
+      await new ParseStatsProvider({ apiKey: 'test', fetcher }).getPlayerData({ name: 'Name', tag: 'TAG', value: 'Name#TAG' })
+      throw new Error('Expected rejection')
+    } catch (error) {
+      expect(error).toBeInstanceOf(AppError)
+      expect((error as AppError).code).toBe(code)
+    }
+  })
+})
+
+describe('GroqClient', () => {
+  it('rejects invalid JSON and invalid structured output', async () => {
+    const invalidJson = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: 'nope' } }] }), { status: 200 }))
+    await expect(new GroqClient({ apiKey: 'test', model: 'test', fetcher: invalidJson }).generate(playerStatsFixture, analyzePlayer(playerStatsFixture), 'mild', 'en')).rejects.toThrow()
+    const invalidShape = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ title: 'ok', roast: 'ok', secondaryRoast: null, rating: 99 }) } }] }), { status: 200 }))
+    await expect(new GroqClient({ apiKey: 'test', model: 'test', fetcher: invalidShape }).generate(playerStatsFixture, analyzePlayer(playerStatsFixture), 'mild', 'en')).rejects.toThrow()
+  })
+})
