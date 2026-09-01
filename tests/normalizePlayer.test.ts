@@ -12,9 +12,14 @@ describe('normalizePlayer', () => {
     expect(result.maps).toHaveLength(1)
     expect(result).not.toHaveProperty('raw')
   })
-  it('uses optional agent segments when available', () => {
-    const result = normalizePlayer({ matches: parseMatchesFixture, segments: { data: [{ metadata: { name: 'Reyna' }, stats: { matchesPlayed: { value: 8 }, kDRatio: { value: 1.1 } } }] } }, riotId)
-    expect(result.mainAgent).toMatchObject({ name: 'Reyna', matches: 8, kd: 1.1 })
+  it('uses the optional profile avatar and recent matches for agents', () => {
+    const result = normalizePlayer({
+      matches: parseMatchesFixture,
+      profile: { data: { platformInfo: { avatarUrl: 'https://titles.trackercdn.com/valorant-api/playercards/card/displayicon.png' } } },
+    }, riotId)
+    expect(result.avatarUrl).toContain('titles.trackercdn.com')
+    expect(result.agents[0]).toMatchObject({ name: 'Reyna', matches: 2 })
+    expect(result.mainAgent).toBeUndefined()
   })
   it('maps an empty match list to player not found', () => expect(() => normalizePlayer({ matches: { data: { matches: [] } } }, riotId)).toThrow(AppError))
 })

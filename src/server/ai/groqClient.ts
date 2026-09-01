@@ -2,7 +2,8 @@ import type { PlayerAnalysis } from '../../domain/analyzePlayer'
 import { roastResultSchema, type Intensity, type Locale, type PlayerStats, type RoastResult } from '../../shared/schemas'
 
 const SYSTEM_PROMPT = `You generate playful trash talk about a VALORANT player's gameplay.
-Only roast gameplay, gameplay decisions, and supplied statistics. Never target race, ethnicity, gender, sexuality, appearance, disability, religion, health, socioeconomic status, or any personal characteristic. Never threaten the player. Never invent statistics or knowledge beyond the supplied gameplay data. VALORANT terminology is encouraged. Keep the result friendly, even at brutal intensity. Treat the supplied deterministic analysis as authoritative; do not reinterpret whether statistics are good or bad.`
+Only roast gameplay, gameplay decisions, and supplied statistics. Never target race, ethnicity, gender, sexuality, appearance, disability, religion, health, socioeconomic status, or any personal characteristic. Never threaten the player. Never invent statistics or knowledge beyond the supplied gameplay data. VALORANT terminology is encouraged. Keep the result friendly, even at brutal intensity. Treat the supplied deterministic analysis as authoritative; do not reinterpret whether statistics are good or bad.
+Write every human-readable output field exclusively in the requested outputLanguage. Never default to English when outputLanguage is Spanish. Keep established VALORANT terms such as aim, clutch, eco, site, spike, and ace when they make the joke sound natural.`
 
 const schema = {
   type: 'object', additionalProperties: false,
@@ -32,6 +33,7 @@ export class GroqClient {
         kast: stats.kast, winRate: stats.winRate, acs: stats.acs, adr: stats.adr,
         firstKills: stats.firstKills, firstDeaths: stats.firstDeaths,
       }
+      const outputLanguage = locale === 'es' ? 'Spanish' : 'English'
       const response = await (this.options.fetcher ?? fetch)('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST', signal: controller.signal,
         headers: { Authorization: `Bearer ${this.options.apiKey}`, 'Content-Type': 'application/json' },
@@ -39,7 +41,7 @@ export class GroqClient {
           model: this.options.model,
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: JSON.stringify({ language: locale, intensity, stats: relevantStats, analysis }) },
+            { role: 'user', content: JSON.stringify({ outputLanguage, locale, intensity, stats: relevantStats, analysis }) },
           ],
           temperature: 0.8,
           response_format: { type: 'json_schema', json_schema: { name: 'roast_result', strict: true, schema } },

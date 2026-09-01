@@ -29,7 +29,7 @@ describe('analyzePlayer', () => {
 describe('generateFallbackRoast', () => {
   it('returns validated-size bilingual deterministic output', () => {
     const analysis = analyzePlayer(playerStatsFixture)
-    expect(generateFallbackRoast(analysis, 'brutal', 'en')).toMatchObject({ title: 'First Class Entry' })
-    expect(generateFallbackRoast(analysis, 'spicy', 'es')).toMatchObject({ title: 'Entrada de primera' })
+    expect(generateFallbackRoast(analysis, 'brutal', 'en')).toMatchObject({ title: 'Fast Pass to Spectator' })
+    expect(generateFallbackRoast(analysis, 'spicy', 'es')).toMatchObject({ title: 'Pase rápido a espectador' })
   })
 })

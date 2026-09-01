@@ -6,6 +6,7 @@
 - Keep statistical interpretation in `src/domain/analyzePlayer.ts` and thresholds in `src/domain/statThresholds.ts`.
 - Keep Parse and Groq credentials server-side. API keys never use a `VITE_` prefix.
 - Parse MCP is development-only discovery tooling; deployed code uses Parse REST.
+- The MVP player flow uses exactly two Parse calls (`get_player_matches` + `get_player_profile`) for 3 credits; agent statistics are derived from recent matches.
 
 ## Verification
 

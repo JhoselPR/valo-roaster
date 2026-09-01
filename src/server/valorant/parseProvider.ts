@@ -41,11 +41,11 @@ export class ParseStatsProvider implements StatsProvider {
 
   async getPlayerData(riotId: RiotId): Promise<ProviderPayload> {
     const identity = new URLSearchParams({ player_id: riotId.value })
-    const [matchesResult, segmentsResult] = await Promise.allSettled([
+    const [matchesResult, profileResult] = await Promise.allSettled([
       this.request('get_player_matches', new URLSearchParams(identity)),
-      this.request('get_player_segments', new URLSearchParams([...identity, ['segment_type', 'agent']])),
+      this.request('get_player_profile', new URLSearchParams(identity)),
     ])
     if (matchesResult.status === 'rejected') throw matchesResult.reason
-    return { matches: matchesResult.value, segments: segmentsResult.status === 'fulfilled' ? segmentsResult.value : undefined }
+    return { matches: matchesResult.value, profile: profileResult.status === 'fulfilled' ? profileResult.value : undefined }
   }
 }

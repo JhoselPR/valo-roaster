@@ -1,6 +1,6 @@
-# Valorant Roast Card
+# Clutch or Cringe
 
-Generate a playful bilingual roast card from real recent VALORANT statistics. Statistical interpretation is deterministic application logic; the LLM only turns trusted facts into friendly gameplay trash talk.
+Generate a playful bilingual VALORANT roast card from real recent statistics. Statistical interpretation is deterministic application logic; the LLM only turns trusted facts into friendly gameplay trash talk.
 
 ## Quick start
 
@@ -43,9 +43,9 @@ The development-only Parse MCP identified scraper `6517942a-644e-4cbc-9349-6e6d5
 | Endpoint | Input | Role | Credits |
 | --- | --- | --- | --- |
 | `get_player_matches` | `player_id` | Required recent matches | 1 |
-| `get_player_segments` | `player_id`, `segment_type=agent` | Optional agent enrichment | 5 |
+| `get_player_profile` | `player_id` | Optional player card/avatar enrichment | 2 |
 
-Runtime calls use `https://api.parse.bot/scraper/{scraper_id}/{endpoint_name}` with `X-API-Key`. A card makes exactly two concurrent calls. Agent enrichment degrades gracefully; match failure stops normalization. Automated tests use synthetic fixtures and mocks and MUST NOT consume credits.
+Runtime calls use `https://api.parse.bot/scraper/{scraper_id}/{endpoint_name}` with `X-API-Key`. A card makes exactly two concurrent calls for a total of 3 credits. Profile enrichment degrades gracefully; match failure stops normalization. Agent and map performance are derived only from the recent-match window. Automated tests use synthetic fixtures and mocks and MUST NOT consume credits.
 
 ## Groq and fallback
 
@@ -72,7 +72,8 @@ pnpm build
 ## Known limits
 
 - Results cover the matches returned by Tracker, not complete lifetime history.
-- RR, weapon performance, party size, and avatar are omitted unless reliable data exists.
+- RR, weapon performance, and party size are omitted unless reliable data exists. The player card/avatar is omitted when the optional profile response does not provide one.
+- Agent performance reflects recent matches, not the complete act or lifetime history.
 - Maps require two matches and agents three before comparative conclusions.
 - There is no shared cache or product-level rate limiter yet; provider boundaries are ready for those additions.
 

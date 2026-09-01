@@ -17,6 +17,26 @@ const defaultDependencies: PlayerHandlerDependencies = {
   getEnvironment: () => ({ apiKey: process.env.PARSE_API_KEY, signingSecret: process.env.PLAYER_STATS_SIGNING_SECRET }),
 }
 
+function logUnexpectedError(error: unknown): void {
+  if (error instanceof AppError) return
+
+  const issues = typeof error === 'object' && error !== null && 'issues' in error && Array.isArray(error.issues)
+    ? error.issues.slice(0, 10).map((issue: unknown) => {
+        if (typeof issue !== 'object' || issue === null) return { code: 'unknown', path: '' }
+        const value = issue as { code?: unknown; path?: unknown }
+        return {
+          code: typeof value.code === 'string' ? value.code : 'unknown',
+          path: Array.isArray(value.path) ? value.path.filter((part) => typeof part === 'string' || typeof part === 'number').join('.') : '',
+        }
+      })
+    : undefined
+
+  console.error('[api/player] Unexpected server error', {
+    name: error instanceof Error ? error.name : typeof error,
+    ...(issues ? { issues } : {}),
+  })
+}
+
 export function createPlayerHandler(dependencies: PlayerHandlerDependencies = defaultDependencies) {
   return async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
   try {
@@ -31,6 +51,7 @@ export function createPlayerHandler(dependencies: PlayerHandlerDependencies = de
     response.setHeader('Cache-Control', 'private, no-store')
     response.status(200).json({ data: stats, snapshot: createPlayerSnapshot(stats, secret) })
   } catch (error) {
+    logUnexpectedError(error)
     sendError(response, error)
   }
 }

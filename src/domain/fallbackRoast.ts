@@ -3,18 +3,18 @@ import type { Intensity, Locale, RoastResult } from '../shared/schemas'
 
 const lines: Record<Locale, Record<string, [string, string]>> = {
   en: {
-    LOW_KD: ['Respawn Enthusiast', 'Your K/D treats every duel like a donation drive.'],
-    LOW_HS: ['Outline Inspector', 'Your crosshair knows every part of the enemy except the head.'],
-    FIRST_DEATH_FAN: ['First Class Entry', 'You enter every site first—mostly into the spectator screen.'],
-    EMPTY_FRAGGER: ['Scoreboard Soloist', 'Great K/D. Shame the victory screen keeps dodging you.'],
-    DEFAULT: ['Certified Average', 'The matchmaking algorithm looked at your stats and whispered: perfectly balanced.'],
+    LOW_KD: ['Respawn Enthusiast', 'Your K/D is not low; it is calling for help from the bottom of the scoreboard.'],
+    LOW_HS: ['Ankle Specialist', 'Your crosshair pays rent at ankle height and visits heads on holidays.'],
+    FIRST_DEATH_FAN: ['Fast Pass to Spectator', 'You enter the site so fast the spectator screen loads before the minimap.'],
+    EMPTY_FRAGGER: ['Scoreboard Soloist', 'You farm K/D like planting the spike is optional content.'],
+    DEFAULT: ['Certified Average', 'You are so average the matchmaking system uses you as a unit of measurement.'],
   },
   es: {
-    LOW_KD: ['Fan del respawn', 'Tu K/D trata cada duelo como una campaña de donaciones.'],
-    LOW_HS: ['Inspector de siluetas', 'Tu mira conoce todo el rival excepto su cabeza.'],
-    FIRST_DEATH_FAN: ['Entrada de primera', 'Entras primero al site y también a la pantalla de espectador.'],
-    EMPTY_FRAGGER: ['Solista del marcador', 'Gran K/D. Lástima que la victoria siga esquivándote.'],
-    DEFAULT: ['Promedio certificado', 'El matchmaking vio tus estadísticas y susurró: equilibrio perfecto.'],
+    LOW_KD: ['Fan del respawn', 'Tu K/D no está bajo; está pidiendo ayuda desde el fondo del marcador.'],
+    LOW_HS: ['Especialista en tobillos', 'Tu crosshair paga renta en los pies y solo visita la cabeza en vacaciones.'],
+    FIRST_DEATH_FAN: ['Pase rápido a espectador', 'Entras al site tan rápido que carga antes el espectador que el minimapa.'],
+    EMPTY_FRAGGER: ['Solista del marcador', 'Farmeas K/D como si plantar la spike fuera contenido opcional.'],
+    DEFAULT: ['Promedio certificado', 'Eres tan promedio que el matchmaking te usa como unidad de medida.'],
   },
 }
 
@@ -27,7 +27,7 @@ export function generateFallbackRoast(analysis: PlayerAnalysis, intensity: Inten
   return {
     title,
     roast: `${base}${suffix}`.slice(0, 180),
-    secondaryRoast: intensity === 'mild' ? undefined : locale === 'es' ? 'Al menos el próximo round siempre trae esperanza.' : 'At least the next round always brings hope.',
+    secondaryRoast: intensity === 'mild' ? undefined : locale === 'es' ? 'No te preocupes: el próximo round también necesita una first death.' : 'Relax: the next round needs a first death too.',
     rating: severity,
   }
 }

@@ -53,26 +53,6 @@ function aggregateBy(matches: unknown[], keyPaths: readonly (readonly string[])[
   })).sort((a, b) => b.matches - a.matches)
 }
 
-function parseSegments(raw: unknown): Performance[] {
-  const data = unwrap(raw)
-  const segments = Array.isArray(data) ? data : list(record(data)?.segments)
-  return segments.flatMap((segment): Performance[] => {
-    const name = stringAt(segment, [['metadata', 'name'], ['metadata', 'agentName'], ['name']])
-    if (!name) return []
-    const matches = numberAt(segment, [['stats', 'matchesPlayed', 'value'], ['stats', 'matches', 'value'], ['matches']]) ?? 0
-    const kills = numberAt(segment, [['stats', 'kills', 'value']])
-    const deaths = numberAt(segment, [['stats', 'deaths', 'value']])
-    return [{
-      name,
-      imageUrl: stringAt(segment, [['metadata', 'imageUrl'], ['metadata', 'portraitUrl']]),
-      matches: Math.max(0, Math.trunc(matches)),
-      wins: numberAt(segment, [['stats', 'matchesWon', 'value'], ['stats', 'wins', 'value']]),
-      kd: numberAt(segment, [['stats', 'kDRatio', 'value']]) ?? (kills !== undefined && deaths ? round(kills / deaths) : undefined),
-      winRate: numberAt(segment, [['stats', 'matchesWinPct', 'value'], ['stats', 'winRate', 'value']]),
-    }]
-  }).sort((a, b) => b.matches - a.matches)
-}
-
 export function normalizePlayer(payload: ProviderPayload, riotId: RiotId): PlayerStats {
   const matches = extractMatches(payload.matches)
   if (matches.length === 0) throw new AppError('PLAYER_NOT_FOUND', 404, 'No recent competitive matches were found for this player.')
@@ -90,13 +70,14 @@ export function normalizePlayer(payload: ProviderPayload, riotId: RiotId): Playe
     const values = matches.map((match) => numberAt(match, paths)).filter((value): value is number => value !== undefined)
     return values.length ? round(values.reduce((sum, value) => sum + value, 0) / values.length) : undefined
   }
-  const agents = payload.segments ? parseSegments(payload.segments) : aggregateBy(matches, [['metadata', 'agentName'], ['agent', 'name']], [['metadata', 'agentImageUrl']])
+  const agents = aggregateBy(matches, [['metadata', 'agentName'], ['agent', 'name']], [['metadata', 'agentImageUrl']])
   const maps = aggregateBy(matches, [['metadata', 'mapName'], ['map', 'name']])
   const eligibleMaps = maps.filter((map) => map.matches >= 2 && map.winRate !== undefined)
   const base = unwrap(payload.matches)
+  const profile = unwrap(payload.profile)
   return playerStatsSchema.parse({
     riotId: riotId.value, name: riotId.name, tag: riotId.tag,
-    avatarUrl: stringAt(base, [['metadata', 'avatarUrl'], ['platformInfo', 'avatarUrl']]),
+    avatarUrl: stringAt(profile, [['platformInfo', 'avatarUrl']]) ?? stringAt(base, [['metadata', 'avatarUrl'], ['platformInfo', 'avatarUrl']]),
     rank: stringAt(matches[0], [['segments', '0', 'stats', 'rank', 'metadata', 'tierName'], ['metadata', 'rankName']]),
     rankImageUrl: stringAt(matches[0], [['segments', '0', 'stats', 'rank', 'metadata', 'iconUrl']]),
     matchesPlayed: matches.length, roundsPlayed: totals.rounds || undefined, wins, losses: matches.length - wins,
