@@ -1,6 +1,6 @@
-import type { RiotId } from '../../domain/riotId'
-import { AppError } from '../errors'
-import type { ProviderPayload, StatsProvider } from './provider'
+import type { RiotId } from '../../domain/riotId.js'
+import { AppError } from '../errors.js'
+import type { ProviderPayload, StatsProvider } from './provider.js'
 
 const BASE_URL = 'https://api.parse.bot/scraper/6517942a-644e-4cbc-9349-6e6d5ddaa622'
 // The MCP-confirmed scraper contract is release 11. The runtime route resolves

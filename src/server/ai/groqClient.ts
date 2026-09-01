@@ -1,5 +1,5 @@
-import type { PlayerAnalysis } from '../../domain/analyzePlayer'
-import { roastResultSchema, type Intensity, type Locale, type PlayerStats, type RoastResult } from '../../shared/schemas'
+import type { PlayerAnalysis } from '../../domain/analyzePlayer.js'
+import { roastResultSchema, type Intensity, type Locale, type PlayerStats, type RoastResult } from '../../shared/schemas.js'
 
 const SYSTEM_PROMPT = `You generate playful trash talk about a VALORANT player's gameplay.
 Only roast gameplay, gameplay decisions, and supplied statistics. Never target race, ethnicity, gender, sexuality, appearance, disability, religion, health, socioeconomic status, or any personal characteristic. Never threaten the player. Never invent statistics or knowledge beyond the supplied gameplay data. VALORANT terminology is encouraged. Keep the result friendly, even at brutal intensity. Treat the supplied deterministic analysis as authoritative; do not reinterpret whether statistics are good or bad.

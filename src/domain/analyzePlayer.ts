@@ -1,5 +1,5 @@
-import type { PlayerStats } from '../shared/schemas'
-import { STAT_THRESHOLDS as T } from './statThresholds'
+import type { PlayerStats } from '../shared/schemas.js'
+import { STAT_THRESHOLDS as T } from './statThresholds.js'
 
 export type AnalysisFact = { code: string; message: string; value?: number | string }
 export type PlayerAnalysis = {

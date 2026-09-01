@@ -1,5 +1,5 @@
-import type { PlayerAnalysis } from './analyzePlayer'
-import type { Intensity, Locale, RoastResult } from '../shared/schemas'
+import type { PlayerAnalysis } from './analyzePlayer.js'
+import type { Intensity, Locale, RoastResult } from '../shared/schemas.js'
 
 const lines: Record<Locale, Record<string, [string, string]>> = {
   en: {

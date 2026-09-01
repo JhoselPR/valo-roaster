@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { analyzePlayer } from '../src/domain/analyzePlayer'
-import { generateFallbackRoast } from '../src/domain/fallbackRoast'
-import { roastRequestSchema } from '../src/shared/schemas'
-import { GroqClient } from '../src/server/ai/groqClient'
-import { AppError } from '../src/server/errors'
-import { requireMethod, sendError } from '../src/server/http'
-import { verifyPlayerSnapshot } from '../src/server/snapshot'
+import { analyzePlayer } from '../src/domain/analyzePlayer.js'
+import { generateFallbackRoast } from '../src/domain/fallbackRoast.js'
+import { roastRequestSchema } from '../src/shared/schemas.js'
+import { GroqClient } from '../src/server/ai/groqClient.js'
+import { AppError } from '../src/server/errors.js'
+import { requireMethod, sendError } from '../src/server/http.js'
+import { verifyPlayerSnapshot } from '../src/server/snapshot.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
   try {

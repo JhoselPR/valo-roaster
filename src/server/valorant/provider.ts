@@ -1,4 +1,4 @@
-import type { RiotId } from '../../domain/riotId'
+import type { RiotId } from '../../domain/riotId.js'
 
 export type ProviderPayload = { matches: unknown; profile?: unknown }
 

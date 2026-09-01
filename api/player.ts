@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { parseRiotId } from '../src/domain/riotId'
-import { AppError } from '../src/server/errors'
-import { requireMethod, sendError } from '../src/server/http'
-import { createPlayerSnapshot } from '../src/server/snapshot'
-import { normalizePlayer } from '../src/server/valorant/normalizePlayer'
-import { ParseStatsProvider } from '../src/server/valorant/parseProvider'
-import type { StatsProvider } from '../src/server/valorant/provider'
+import { parseRiotId } from '../src/domain/riotId.js'
+import { AppError } from '../src/server/errors.js'
+import { requireMethod, sendError } from '../src/server/http.js'
+import { createPlayerSnapshot } from '../src/server/snapshot.js'
+import { normalizePlayer } from '../src/server/valorant/normalizePlayer.js'
+import { ParseStatsProvider } from '../src/server/valorant/parseProvider.js'
+import type { StatsProvider } from '../src/server/valorant/provider.js'
 
 type PlayerHandlerDependencies = {
   createProvider: (apiKey: string) => StatsProvider

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { AppError, errorBody, toAppError } from './errors'
+import { AppError, errorBody, toAppError } from './errors.js'
 
 export function sendError(response: VercelResponse, error: unknown): void {
   const appError = toAppError(error)

@@ -1,4 +1,4 @@
-import type { ErrorCode } from '../shared/schemas'
+import type { ErrorCode } from '../shared/schemas.js'
 
 export class AppError extends Error {
   readonly code: ErrorCode

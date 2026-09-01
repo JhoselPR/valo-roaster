@@ -1,7 +1,7 @@
-import type { RiotId } from '../../domain/riotId'
-import { playerStatsSchema, type Performance, type PlayerStats } from '../../shared/schemas'
-import { AppError } from '../errors'
-import type { ProviderPayload } from './provider'
+import type { RiotId } from '../../domain/riotId.js'
+import { playerStatsSchema, type Performance, type PlayerStats } from '../../shared/schemas.js'
+import { AppError } from '../errors.js'
+import type { ProviderPayload } from './provider.js'
 
 type JsonRecord = Record<string, unknown>
 const record = (value: unknown): JsonRecord | undefined => typeof value === 'object' && value !== null && !Array.isArray(value) ? value as JsonRecord : undefined

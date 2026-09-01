@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { playerStatsSchema, type PlayerStats } from '../shared/schemas'
-import { AppError } from './errors'
+import { playerStatsSchema, type PlayerStats } from '../shared/schemas.js'
+import { AppError } from './errors.js'
 
 type SnapshotPayload = { stats: PlayerStats; expiresAt: number }
 const encode = (value: string) => Buffer.from(value).toString('base64url')

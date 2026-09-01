@@ -8,6 +8,7 @@
     "dev:vercel": "vercel dev",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
+    "typecheck:api": "tsc -p tsconfig.api.json --pretty false",
     "test": "vitest run",
     "lint": "eslint .",
     "preview": "vite preview"
