@@ -26,6 +26,16 @@ const stringAt = (value: unknown, paths: readonly (readonly string[])[]): string
 const round = (value: number | undefined, precision = 2) => value === undefined ? undefined : Number(value.toFixed(precision))
 const unwrap = (raw: unknown): unknown => record(raw)?.data ?? raw
 
+function completeSum(matches: unknown[], paths: readonly (readonly string[])[]): number | undefined {
+  let total = 0
+  for (const match of matches) {
+    const value = numberAt(match, paths)
+    if (value === undefined) return undefined
+    total += value
+  }
+  return total
+}
+
 function extractMatches(raw: unknown): unknown[] {
   const data = unwrap(raw)
   if (Array.isArray(data)) return data
@@ -56,21 +66,22 @@ function aggregateBy(matches: unknown[], keyPaths: readonly (readonly string[])[
 export function normalizePlayer(payload: ProviderPayload, riotId: RiotId): PlayerStats {
   const matches = extractMatches(payload.matches)
   if (matches.length === 0) throw new AppError('PLAYER_NOT_FOUND', 404, 'No recent competitive matches were found for this player.')
-  type Totals = { kills: number; deaths: number; assists: number; firstKills: number; firstDeaths: number; rounds: number }
+  type Totals = { kills: number; deaths: number; assists: number; rounds: number }
   const totals = matches.reduce<Totals>((sum, match) => ({
     kills: sum.kills + (numberAt(match, [['stats', 'kills'], ['segments', '0', 'stats', 'kills', 'value']]) ?? 0),
     deaths: sum.deaths + (numberAt(match, [['stats', 'deaths'], ['segments', '0', 'stats', 'deaths', 'value']]) ?? 0),
     assists: sum.assists + (numberAt(match, [['stats', 'assists'], ['segments', '0', 'stats', 'assists', 'value']]) ?? 0),
-    firstKills: sum.firstKills + (numberAt(match, [['stats', 'firstKills'], ['segments', '0', 'stats', 'firstKills', 'value']]) ?? 0),
-    firstDeaths: sum.firstDeaths + (numberAt(match, [['stats', 'firstDeaths'], ['segments', '0', 'stats', 'firstDeaths', 'value']]) ?? 0),
     rounds: sum.rounds + (numberAt(match, [['segments', '0', 'stats', 'roundsPlayed', 'value'], ['stats', 'roundsPlayed'], ['metadata', 'roundsPlayed']]) ?? ((numberAt(match, [['stats', 'roundsWon']]) ?? 0) + (numberAt(match, [['stats', 'roundsLost']]) ?? 0))),
-  }), { kills: 0, deaths: 0, assists: 0, firstKills: 0, firstDeaths: 0, rounds: 0 })
+  }), { kills: 0, deaths: 0, assists: 0, rounds: 0 })
+  const firstKills = completeSum(matches, [['segments', '0', 'stats', 'firstBloods', 'value']])
+  const firstDeaths = completeSum(matches, [['segments', '0', 'stats', 'firstDeaths', 'value']])
+  const hasCompleteFirstDuels = firstKills !== undefined && firstDeaths !== undefined
   const wins = matches.filter((match) => stringAt(match, [['metadata', 'result'], ['result']])?.toLowerCase() === 'victory' || path(match, ['stats', 'won']) === true).length
   const average = (paths: readonly (readonly string[])[]) => {
     const values = matches.map((match) => numberAt(match, paths)).filter((value): value is number => value !== undefined)
     return values.length ? round(values.reduce((sum, value) => sum + value, 0) / values.length) : undefined
   }
-  const agents = aggregateBy(matches, [['metadata', 'agentName'], ['agent', 'name']], [['metadata', 'agentImageUrl']])
+  const agents = aggregateBy(matches, [['segments', '0', 'metadata', 'agentName']], [['segments', '0', 'metadata', 'agentImageUrl']])
   const maps = aggregateBy(matches, [['metadata', 'mapName'], ['map', 'name']])
   const eligibleMaps = maps.filter((map) => map.matches >= 2 && map.winRate !== undefined)
   const base = unwrap(payload.matches)
@@ -85,10 +96,12 @@ export function normalizePlayer(payload: ProviderPayload, riotId: RiotId): Playe
     kd: totals.deaths ? round(totals.kills / totals.deaths) : undefined,
     kda: totals.deaths ? round((totals.kills + totals.assists) / totals.deaths) : undefined,
     headshotPercentage: average([['stats', 'headshotsPercentage'], ['segments', '0', 'stats', 'headshotsPercentage', 'value']]),
-    kast: average([['stats', 'kast'], ['segments', '0', 'stats', 'kast', 'value']]),
+    kast: average([['segments', '0', 'stats', 'kAST', 'value']]),
     acs: average([['stats', 'scorePerRound'], ['segments', '0', 'stats', 'scorePerRound', 'value']]),
     adr: average([['stats', 'damagePerRound'], ['segments', '0', 'stats', 'damagePerRound', 'value']]),
-    winRate: round(wins / matches.length * 100), firstKills: totals.firstKills, firstDeaths: totals.firstDeaths,
+    winRate: round(wins / matches.length * 100),
+    firstKills: hasCompleteFirstDuels ? firstKills : undefined,
+    firstDeaths: hasCompleteFirstDuels ? firstDeaths : undefined,
     agents, maps, mainAgent: agents.find((agent) => agent.matches >= 3),
     bestMap: eligibleMaps.toSorted((a, b) => (b.winRate ?? 0) - (a.winRate ?? 0))[0],
     worstMap: eligibleMaps.toSorted((a, b) => (a.winRate ?? 0) - (b.winRate ?? 0))[0],

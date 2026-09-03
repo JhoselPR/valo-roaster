@@ -12,7 +12,21 @@ export const playerStatsFixture: PlayerStats = {
 
 export const parseMatchesFixture = {
   data: { matches: [
-    { metadata: { result: 'victory', mapName: 'Ascent', agentName: 'Reyna', rankName: 'Gold 2' }, stats: { kills: 12, deaths: 10, assists: 4, headshotsPercentage: 20, kast: 72, scorePerRound: 205, damagePerRound: 145, firstKills: 2, firstDeaths: 1 }, segments: [{ stats: { roundsPlayed: { value: 22 } } }] },
-    { metadata: { result: 'defeat', mapName: 'Ascent', agentName: 'Reyna' }, stats: { kills: 8, deaths: 12, assists: 3, headshotsPercentage: 16, kast: 64, scorePerRound: 165, damagePerRound: 125, firstKills: 0, firstDeaths: 2 }, segments: [{ stats: { roundsPlayed: { value: 20 } } }] },
+    {
+      metadata: { result: 'victory', mapName: 'Ascent', rankName: 'Gold 2' },
+      stats: { kills: 12, deaths: 10, assists: 4, headshotsPercentage: 20, scorePerRound: 205, damagePerRound: 145 },
+      segments: [{
+        metadata: { agentName: 'Reyna', agentImageUrl: 'https://titles.trackercdn.com/valorant-api/agents/reyna.png' },
+        stats: { roundsPlayed: { value: 22 }, firstBloods: { value: 2 }, firstDeaths: { value: 1 }, kAST: { value: 72 } },
+      }],
+    },
+    {
+      metadata: { result: 'defeat', mapName: 'Ascent' },
+      stats: { kills: 8, deaths: 12, assists: 3, headshotsPercentage: 16, scorePerRound: 165, damagePerRound: 125 },
+      segments: [{
+        metadata: { agentName: 'Reyna', agentImageUrl: 'https://titles.trackercdn.com/valorant-api/agents/reyna.png' },
+        stats: { roundsPlayed: { value: 20 }, firstBloods: { value: 0 }, firstDeaths: { value: 2 }, kAST: { value: 64 } },
+      }],
+    },
   ] },
 }

@@ -42,4 +42,15 @@ describe('GroqClient', () => {
     expect(request?.body).toContain('\\"outputLanguage\\":\\"Spanish\\"')
     expect(request?.body).toContain('Never default to English when outputLanguage is Spanish')
   })
+
+  it('forbids criticism inferred independently from raw statistics', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ title: 'Bounded roast', roast: 'Only deterministic facts are used.', secondaryRoast: null, rating: 4 }) } }] }), { status: 200 }))
+
+    await new GroqClient({ apiKey: 'test', model: 'test', fetcher }).generate(playerStatsFixture, analyzePlayer(playerStatsFixture), 'spicy', 'en')
+
+    const body = fetcher.mock.calls[0]?.[1]?.body
+    expect(typeof body).toBe('string')
+    expect(body).toContain('The only permitted sources for criticism are analysis.weaknesses, analysis.roastableFacts, and analysis.archetypes')
+    expect(body).toContain('Raw stats are neutral context')
+  })
 })
